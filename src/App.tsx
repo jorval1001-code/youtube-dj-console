@@ -813,6 +813,9 @@ export default function App() {
   // Multi-Screen Control Modes
   const [screenModeA, setScreenModeA] = useState<'local' | 'external'>('local');
   const [screenModeB, setScreenModeB] = useState<'local' | 'external'>('local');
+  const popoutConnectedRef = useRef<{ A: boolean; B: boolean }>({ A: false, B: false });
+  const [popoutNoticeA, setPopoutNoticeA] = useState<string | null>(null);
+  const [popoutNoticeB, setPopoutNoticeB] = useState<string | null>(null);
 
   // Time / Duration states mirrored from external player (if screenMode is external)
   const [currentTimeA, setCurrentTimeA] = useState(0);
@@ -975,6 +978,8 @@ export default function App() {
         }
       } else if (type === "PONG") {
         console.log(`Popout connection verified for Deck: ${deckId}`);
+        if (deckId === "A" || deckId === "dual") popoutConnectedRef.current.A = true;
+        if (deckId === "B" || deckId === "dual") popoutConnectedRef.current.B = true;
       }
     };
 
@@ -987,6 +992,36 @@ export default function App() {
       channel.close();
     };
   }, [screenModeA, screenModeB]);
+
+  // Safety net: if a deck is switched to "external" but no pop-out window answers the PING
+  // within a few seconds (blocked pop-up, closed window, etc.), it would otherwise stay stuck
+  // showing the dark "external screen" placeholder forever with no real playback. Fall back to
+  // local/console mode automatically instead.
+  useEffect(() => {
+    if (screenModeA !== "external") return;
+    popoutConnectedRef.current.A = false;
+    const timeout = window.setTimeout(() => {
+      if (!popoutConnectedRef.current.A) {
+        setScreenModeA("local");
+        setPopoutNoticeA("No se detectó la ventana pop-out — Deck A volvió a modo CONSOLA.");
+        window.setTimeout(() => setPopoutNoticeA(null), 5000);
+      }
+    }, 4000);
+    return () => window.clearTimeout(timeout);
+  }, [screenModeA]);
+
+  useEffect(() => {
+    if (screenModeB !== "external") return;
+    popoutConnectedRef.current.B = false;
+    const timeout = window.setTimeout(() => {
+      if (!popoutConnectedRef.current.B) {
+        setScreenModeB("local");
+        setPopoutNoticeB("No se detectó la ventana pop-out — Deck B volvió a modo CONSOLA.");
+        window.setTimeout(() => setPopoutNoticeB(null), 5000);
+      }
+    }, 4000);
+    return () => window.clearTimeout(timeout);
+  }, [screenModeB]);
 
   // Handle cross-sync between local and external modes dynamically
   useEffect(() => {
@@ -1998,6 +2033,17 @@ export default function App() {
                   <span className="text-emerald-400 font-bold tracking-wider">AUTO DJ ON AIR</span>
                 </div>
                 <span className="text-zinc-400 truncate">{autoDjStatus}</span>
+              </div>
+            )}
+
+            {/* Pop-out connection notices */}
+            {(popoutNoticeA || popoutNoticeB) && (
+              <div
+                className="flex flex-col gap-1 bg-amber-950/30 border border-amber-700/40 rounded-xl px-4 py-2.5 text-xs font-mono text-amber-400"
+                id="popout-notice-bar"
+              >
+                {popoutNoticeA && <span>{popoutNoticeA}</span>}
+                {popoutNoticeB && <span>{popoutNoticeB}</span>}
               </div>
             )}
 
