@@ -1512,7 +1512,14 @@ export default function App() {
       });
 
       if (!res.ok) {
-        throw new Error("El servidor de Gemini no respondió correctamente.");
+        const errBody = await res.json().catch(() => null);
+        const rawMessage = errBody?.error ? String(errBody.error) : "";
+        const isOverloaded = /503|429|UNAVAILABLE|RESOURCE_EXHAUSTED|high demand/i.test(rawMessage);
+        throw new Error(
+          isOverloaded
+            ? "Gemini está saturado de solicitudes en este momento. Intenta de nuevo en unos segundos."
+            : "El servidor de Gemini no respondió correctamente."
+        );
       }
 
       const data = await res.json();
