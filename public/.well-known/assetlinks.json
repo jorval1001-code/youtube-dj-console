@@ -1,0 +1,8 @@
+[{
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "com.jorval1001.youtubedjconsole",
+        "sha256_cert_fingerprints": ["D5:72:15:3B:26:71:8A:68:7D:B8:DB:5B:23:57:74:4E:5D:D7:D4:38:EA:CE:F8:A2:82:76:A2:49:32:73:66:83"]
+      }
+    }]
