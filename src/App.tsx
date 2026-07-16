@@ -1048,6 +1048,56 @@ export default function App() {
     updateVolumes();
   }, [crossfader, volA, volB, masterVolume, trackA, trackB, screenModeA, screenModeB]);
 
+  // Media Session integration: keeps a lock-screen "now playing" notification (title/artist/
+  // artwork + play/pause controls) in sync with whichever deck is loudest in the mix. Android
+  // treats an active media session as a reason to keep audio alive when the app is backgrounded
+  // (e.g. while the user switches away to search for the next track), so this also makes
+  // background playback more reliable, not just cosmetic.
+  useEffect(() => {
+    if (typeof navigator === "undefined" || !("mediaSession" in navigator)) return;
+
+    const volEffA = calculateEffectiveVolume("A", crossfader, volA, masterVolume);
+    const volEffB = calculateEffectiveVolume("B", crossfader, volB, masterVolume);
+
+    let activeDeck: "A" | "B" | null = null;
+    if (isPlayingA && isPlayingB) activeDeck = volEffA >= volEffB ? "A" : "B";
+    else if (isPlayingA) activeDeck = "A";
+    else if (isPlayingB) activeDeck = "B";
+
+    const displayDeck = activeDeck ?? (trackA ? "A" : trackB ? "B" : null);
+    const displayTrack = displayDeck === "A" ? trackA : displayDeck === "B" ? trackB : null;
+
+    if (displayTrack) {
+      const artwork = displayTrack.isLocalFile
+        ? [{ src: "/icons/icon-512.png", sizes: "512x512", type: "image/png" }]
+        : [
+            { src: `https://img.youtube.com/vi/${displayTrack.youtubeId}/hqdefault.jpg`, sizes: "480x360", type: "image/jpeg" },
+            { src: "/icons/icon-512.png", sizes: "512x512", type: "image/png" },
+          ];
+
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: displayTrack.title,
+        artist: displayTrack.artist,
+        album: "YouTube DJ Console",
+        artwork,
+      });
+    }
+
+    navigator.mediaSession.playbackState = activeDeck ? "playing" : "paused";
+
+    navigator.mediaSession.setActionHandler("play", () => {
+      if (displayDeck) handlePlayPause(displayDeck);
+    });
+    navigator.mediaSession.setActionHandler("pause", () => {
+      if (displayDeck) handlePlayPause(displayDeck);
+    });
+
+    return () => {
+      navigator.mediaSession.setActionHandler("play", null);
+      navigator.mediaSession.setActionHandler("pause", null);
+    };
+  }, [trackA, trackB, isPlayingA, isPlayingB, crossfader, volA, volB, masterVolume]);
+
   // Volume curve math
   const calculateEffectiveVolume = (
     deckId: "A" | "B",
