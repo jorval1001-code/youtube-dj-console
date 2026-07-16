@@ -51,8 +51,9 @@ User request: "${prompt || "Haz algo interesante para mezclar estas canciones o 
 `;
 
   // Gemini occasionally returns transient 503/429 "high demand" errors that clear up within
-  // seconds — retry a couple of times with backoff instead of surfacing those as a hard failure.
-  const maxAttempts = 3;
+  // seconds — retry once with a short backoff instead of surfacing those as a hard failure.
+  // Kept short/single so total latency stays well under the serverless function's time limit.
+  const maxAttempts = 2;
   let lastError: unknown;
   for (let attempt = 0; attempt < maxAttempts; attempt++) {
     try {
@@ -70,7 +71,7 @@ User request: "${prompt || "Haz algo interesante para mezclar estas canciones o 
       lastError = err;
       const isTransient = /503|429|UNAVAILABLE|RESOURCE_EXHAUSTED|high demand/i.test(String(err?.message));
       if (!isTransient || attempt === maxAttempts - 1) throw err;
-      await new Promise((resolve) => setTimeout(resolve, 1000 * (attempt + 1)));
+      await new Promise((resolve) => setTimeout(resolve, 700));
     }
   }
   throw lastError;
