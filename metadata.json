@@ -1,0 +1,6 @@
+{
+  "name": "YouTube DJ Console",
+  "description": "Una consola de DJ profesional de doble pantalla para mezclar videos y música directamente desde YouTube.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
