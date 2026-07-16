@@ -1,4 +1,4 @@
-import { runGeminiControl } from "../lib/geminiControl";
+import { runGeminiControl } from "../lib/geminiControl.js";
 
 export default async function handler(req: any, res: any) {
   if (req.method !== "POST") {
