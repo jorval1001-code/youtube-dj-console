@@ -339,7 +339,7 @@ export function ExternalPlayerView({ playerType }: ExternalPlayerViewProps) {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col justify-between relative overflow-hidden select-none font-sans" id="popout-root">
+    <div className="min-h-dvh bg-black text-white flex flex-col justify-between relative overflow-hidden select-none font-sans" id="popout-root">
       {/* Dynamic Grid for Dual/Single display */}
       <div className={`flex-1 grid ${playerType === "dual" ? "grid-cols-1 md:grid-cols-2 h-screen" : "grid-cols-1 h-screen"} bg-zinc-950`} id="popout-grid">
         {/* PLAYER A CONTAINER */}
@@ -600,7 +600,7 @@ function PreviewPlayerView() {
   };
 
   return (
-    <div className="min-h-screen bg-black text-white flex flex-col select-none font-sans" id="preview-root">
+    <div className="min-h-dvh bg-black text-white flex flex-col select-none font-sans" id="preview-root">
       <div className="flex items-center gap-2 px-4 py-2 bg-zinc-950 border-b border-zinc-900">
         <Eye className="w-4 h-4 text-purple-400" />
         <span className="text-xs font-mono font-bold tracking-widest text-purple-400 uppercase">PREVIEW / CUE • AISLADO DEL MIX</span>
@@ -1758,7 +1758,7 @@ export default function App() {
 
   if (!isLoggedIn) {
     return (
-      <main className="min-h-screen bg-[#09090b] text-zinc-100 flex flex-col items-center justify-center p-4 relative overflow-hidden" id="login-root">
+      <main className="min-h-dvh bg-[#09090b] text-zinc-100 flex flex-col items-center justify-center p-4 relative overflow-hidden" id="login-root">
         {/* Decorative ambient blurred glowing circles */}
         <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
@@ -1863,7 +1863,7 @@ export default function App() {
   }
 
   return (
-    <main className="min-h-screen bg-[#09090b] text-zinc-100 flex flex-col justify-between" id="app-root">
+    <main className="min-h-dvh bg-[#09090b] text-zinc-100 flex flex-col justify-between" id="app-root">
       {/* ================= HEADER CONTROLS ================= */}
       <header className="bg-zinc-950 border-b border-zinc-900 px-6 py-4 flex flex-col md:flex-row items-center justify-between gap-4 select-none z-30" id="header-control">
         <div className="flex items-center gap-3">
