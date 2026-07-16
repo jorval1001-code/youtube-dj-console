@@ -1,11 +1,12 @@
 import React, { useEffect, useState, useRef } from "react";
-import { Play, Pause, RotateCcw, Zap, Flame, Compass, RefreshCw, VolumeX, ShieldAlert, ArrowUpRight, Monitor } from "lucide-react";
+import { Play, Pause, RotateCcw, Zap, Flame, Compass, RefreshCw, VolumeX, ShieldAlert, AlertCircle, ArrowUpRight, Monitor } from "lucide-react";
 import { DJTrack } from "../types";
 
 interface DeckProps {
   id: "A" | "B";
   track: DJTrack | null;
   isPlaying: boolean;
+  videoError?: boolean;
   onPlayPause: () => void;
   onLoadTrack: () => void;
   onResetTrack: () => void;
@@ -39,6 +40,7 @@ export const Deck: React.FC<DeckProps> = ({
   id,
   track,
   isPlaying,
+  videoError,
   onPlayPause,
   onLoadTrack,
   onResetTrack,
@@ -533,6 +535,26 @@ export const Deck: React.FC<DeckProps> = ({
               >
                 <ArrowUpRight className="w-2.5 h-2.5" />
                 FORZAR POP-OUT
+              </button>
+            </div>
+          )}
+
+          {/* Video Error Overlay — shown when the YouTube embed fails (embedding disabled, region
+              blocked, removed, etc). Without this the deck just silently renders a black frame. */}
+          {videoError && !track?.isLocalFile && (
+            <div className="absolute inset-0 bg-red-950/90 z-20 flex flex-col items-center justify-center p-3 text-center select-none border border-red-900/40 gap-1.5">
+              <AlertCircle className="w-8 h-8 text-red-400" />
+              <span className="text-[9px] text-red-400 font-mono tracking-widest uppercase font-bold">
+                VIDEO NO DISPONIBLE
+              </span>
+              <span className="text-[9px] text-zinc-300 font-mono truncate max-w-full px-2">
+                {track?.title}
+              </span>
+              <button
+                onClick={onLoadTrack}
+                className={`mt-1 px-3 py-1 text-[10px] font-mono border rounded tracking-wider uppercase transition ${themeClass} hover:opacity-80`}
+              >
+                Elegir otro video
               </button>
             </div>
           )}

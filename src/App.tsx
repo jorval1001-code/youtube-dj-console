@@ -239,6 +239,11 @@ export function ExternalPlayerView({ playerType }: ExternalPlayerViewProps) {
             } else {
               setIsPlayingB(isPlaying);
             }
+          },
+          onError: (event: any) => {
+            console.error(`YouTube player error on Popout Deck ${deckId}:`, event.data);
+            if (deckId === "A") setIsPlayingA(false);
+            else setIsPlayingB(false);
           }
         }
       });
@@ -730,6 +735,7 @@ export default function App() {
   // Deck A State
   const [trackA, setTrackA] = useState<DJTrack | null>(null);
   const [isPlayingA, setIsPlayingA] = useState(false);
+  const [videoErrorA, setVideoErrorA] = useState(false);
   const [volA, setVolA] = useState(80);
   const [gainA, setGainA] = useState(50);
   const [eqHighA, setEqHighA] = useState(0);
@@ -742,6 +748,7 @@ export default function App() {
   // Deck B State
   const [trackB, setTrackB] = useState<DJTrack | null>(null);
   const [isPlayingB, setIsPlayingB] = useState(false);
+  const [videoErrorB, setVideoErrorB] = useState(false);
   const [volB, setVolB] = useState(80);
   const [gainB, setGainB] = useState(50);
   const [eqHighB, setEqHighB] = useState(0);
@@ -1123,6 +1130,7 @@ export default function App() {
     if (deck === "A") {
       setTrackA(track);
       setIsPlayingA(false);
+      setVideoErrorA(false);
       setCurrentTimeA(0);
       setDurationA(0);
       if (screenModeA === "local") {
@@ -1139,6 +1147,7 @@ export default function App() {
     } else {
       setTrackB(track);
       setIsPlayingB(false);
+      setVideoErrorB(false);
       setCurrentTimeB(0);
       setDurationB(0);
       if (screenModeB === "local") {
@@ -1211,6 +1220,27 @@ export default function App() {
             } else if (event.data === 0) {
               if (deckId === "A") setIsPlayingA(false);
               if (deckId === "B") setIsPlayingB(false);
+            }
+          },
+          // Fires for embedding-restricted, region-blocked, or removed videos (error codes
+          // 2, 5, 100, 101, 150). Without this, a failed video just renders as a black frame
+          // with no feedback and no recovery — this is what was showing up as "the screen goes
+          // black" when Auto DJ happened to pick a track that can't be embedded.
+          onError: (event: any) => {
+            console.error(`YouTube player error on Deck ${deckId}:`, event.data);
+            if (deckId === "A") { setVideoErrorA(true); setIsPlayingA(false); }
+            else { setVideoErrorB(true); setIsPlayingB(false); }
+
+            // If Auto DJ was mid-transition bringing THIS deck in, don't crossfade into a dead
+            // video — cancel this attempt and immediately retry with a different track instead.
+            const leadDeck = autoDjActiveDeckRef.current;
+            if (autoDjTransitioningRef.current && leadDeck && leadDeck !== deckId) {
+              autoDjTransitioningRef.current = false;
+              const leadTrack = leadDeck === "A" ? trackA : trackB;
+              if (leadTrack) {
+                setAutoDjStatus(`Auto DJ: el video no se pudo reproducir, probando con otra pista...`);
+                window.setTimeout(() => beginAutoDjTransition(leadDeck, leadTrack), 500);
+              }
             }
           }
         }
@@ -1311,6 +1341,7 @@ export default function App() {
     if (deck === "A") {
       setTrackA(null);
       setIsPlayingA(false);
+      setVideoErrorA(false);
       setCurrentTimeA(0);
       setDurationA(0);
       if (screenModeA === "local") {
@@ -1324,6 +1355,7 @@ export default function App() {
     } else {
       setTrackB(null);
       setIsPlayingB(false);
+      setVideoErrorB(false);
       setCurrentTimeB(0);
       setDurationB(0);
       if (screenModeB === "local") {
@@ -1976,6 +2008,7 @@ export default function App() {
                   id="A"
                   track={trackA}
                   isPlaying={isPlayingA}
+                  videoError={videoErrorA}
                   onPlayPause={() => handlePlayPause("A")}
                   onLoadTrack={() => {
                     handleLoadTrack(PRESET_TRACKS[0], "A");
@@ -2052,6 +2085,7 @@ export default function App() {
                   id="B"
                   track={trackB}
                   isPlaying={isPlayingB}
+                  videoError={videoErrorB}
                   onPlayPause={() => handlePlayPause("B")}
                   onLoadTrack={() => {
                     handleLoadTrack(PRESET_TRACKS[1], "B");
